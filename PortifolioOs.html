@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TM19 — Portfólio OS</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+:root{
+  --bg-void:#07060a;
+  --bg-panel:#121016;
+  --bg-panel-2:#1a1620;
+  --line:#2c2634;
+  --orange:#ff7a1a;
+  --orange-dim:#c95f10;
+  --violet:#5b2a9e;
+  --violet-2:#8b4fd6;
+  --text:#eae6f0;
+  --text-dim:#9b93a8;
+  --mono:'JetBrains Mono', monospace;
+  --sans:'Space Grotesk', sans-serif;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;height:100%;overflow:hidden;font-family:var(--sans);color:var(--text);}
+
+body{
+  background:
+    radial-gradient(circle at 15% 20%, rgba(139,79,214,0.16), transparent 40%),
+    radial-gradient(circle at 85% 75%, rgba(255,122,26,0.10), transparent 45%),
+    var(--bg-void);
+  position:relative;
+}
+
+#desktop{
+  position:absolute; inset:0 0 44px 0;
+  padding:28px;
+  display:grid;
+  grid-template-rows:repeat(auto-fill, 96px);
+  grid-auto-flow:column;
+  gap:6px;
+  overflow:hidden;
+}
+
+.icon{
+  width:88px; height:92px;
+  display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+  gap:8px; padding:8px 4px; border-radius:8px; cursor:pointer;
+  -webkit-user-select:none; user-select:none;
+  border:1px solid transparent;
+}
+.icon:hover, .icon:focus-visible{ background:rgba(255,255,255,0.05); border-color:var(--line); outline:none;}
+.icon .glyph{
+  width:44px; height:44px; border-radius:10px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px;
+  background:linear-gradient(155deg, var(--violet-2), var(--violet));
+  box-shadow:0 4px 14px rgba(0,0,0,0.4);
+}
+.icon.accent .glyph{ background:linear-gradient(155deg, var(--orange), var(--orange-dim)); }
+.icon .label{ font-size:12px; text-align:center; line-height:1.25; color:var(--text); text-shadow:0 1px 2px rgba(0,0,0,0.6);}
+
+/* Taskbar */
+#taskbar{
+  position:absolute; left:0; right:0; bottom:0; height:44px;
+  background:rgba(18,16,22,0.92);
+  backdrop-filter:blur(10px);
+  border-top:1px solid var(--line);
+  display:flex; align-items:center; gap:8px; padding:0 10px;
+  font-family:var(--mono); font-size:13px;
+  z-index:500;
+}
+#start-btn{
+  display:flex; align-items:center; gap:8px;
+  background:var(--orange); color:#1a1005; border:none; border-radius:6px;
+  padding:7px 12px; font-family:var(--mono); font-weight:700; font-size:13px;
+  cursor:pointer;
+}
+#start-btn:hover{ background:#ff8c3d; }
+#taskbar-apps{ display:flex; gap:6px; flex:1; overflow-x:auto; }
+.task-chip{
+  display:flex; align-items:center; gap:6px;
+  padding:6px 10px; border-radius:6px; border:1px solid var(--line);
+  background:var(--bg-panel-2); color:var(--text-dim); cursor:pointer; white-space:nowrap;
+}
+.task-chip.active{ color:var(--text); border-color:var(--orange-dim); }
+#clock{ color:var(--text-dim); padding-left:8px; border-left:1px solid var(--line); }
+
+/* Start menu */
+#start-menu{
+  position:absolute; left:10px; bottom:52px; width:280px;
+  background:var(--bg-panel); border:1px solid var(--line); border-radius:10px;
+  box-shadow:0 20px 50px rgba(0,0,0,0.5);
+  display:none; flex-direction:column; overflow:hidden; z-index:600;
+}
+#start-menu.open{ display:flex; }
+#start-search{
+  margin:12px; padding:9px 12px; border-radius:6px; border:1px solid var(--line);
+  background:var(--bg-panel-2); color:var(--text); font-family:var(--sans); font-size:13px;
+}
+#start-search::placeholder{ color:var(--text-dim); }
+.start-item{
+  display:flex; align-items:center; gap:12px; padding:11px 16px;
+  cursor:pointer; font-size:14px; color:var(--text);
+}
+.start-item:hover{ background:rgba(255,122,26,0.08); }
+.start-sep{ height:1px; background:var(--line); margin:4px 0; }
+
+/* Windows */
+.window{
+  position:absolute; min-width:340px; min-height:220px;
+  background:var(--bg-panel); border:1px solid var(--line); border-radius:10px;
+  box-shadow:0 24px 60px rgba(0,0,0,0.55);
+  display:flex; flex-direction:column; overflow:hidden;
+}
+.window.minimized{ display:none; }
+.win-titlebar{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:9px 12px; background:var(--bg-panel-2); border-bottom:1px solid var(--line);
+  cursor:grab; -webkit-user-select:none; user-select:none;
+}
+.win-title{ display:flex; align-items:center; gap:8px; font-family:var(--mono); font-size:13px; font-weight:500;}
+.win-controls{ display:flex; gap:6px; }
+.win-btn{
+  width:22px; height:22px; border-radius:5px; border:1px solid var(--line);
+  background:transparent; color:var(--text-dim); cursor:pointer; font-size:12px;
+  display:flex; align-items:center; justify-content:center;
+}
+.win-btn:hover{ background:rgba(255,255,255,0.08); color:var(--text); }
+.win-btn.close:hover{ background:#c9432f; color:#fff; border-color:#c9432f; }
+
+.win-tabs{ display:flex; border-bottom:1px solid var(--line); background:var(--bg-void); }
+.win-tab{
+  padding:9px 16px; font-size:13px; color:var(--text-dim); cursor:pointer;
+  border-bottom:2px solid transparent; font-family:var(--mono);
+}
+.win-tab.active{ color:var(--orange); border-bottom-color:var(--orange); }
+.win-body{ flex:1; overflow:auto; padding:20px; font-size:14px; line-height:1.6; }
+.win-body h2{ font-size:18px; margin:0 0 10px; }
+.win-body p{ color:#d7d2df; margin:0 0 12px; }
+.win-body .tags{ display:flex; flex-wrap:wrap; gap:6px; margin:10px 0; }
+.win-body .tag{
+  font-family:var(--mono); font-size:11.5px; padding:3px 9px; border-radius:5px;
+  border:1px solid var(--line); color:var(--violet-2); background:rgba(139,79,214,0.08);
+}
+.win-body ul{ margin:0 0 12px; padding-left:18px; color:#d7d2df; }
+.file-list{ font-family:var(--mono); font-size:13px; }
+.file-list div{ padding:5px 0; color:var(--text-dim); cursor:pointer; }
+.file-list div:hover{ color:var(--orange); }
+.code-preview{
+  background:var(--bg-void); border:1px solid var(--line); border-radius:8px;
+  padding:14px; font-family:var(--mono); font-size:12.5px; color:#c9c2d6; overflow:auto;
+  white-space:pre;
+}
+.demo-frame{
+  border:1px dashed var(--line); border-radius:8px; padding:26px; text-align:center;
+  color:var(--text-dim); font-size:13px;
+}
+.demo-frame a{ color:var(--orange); }
+.demo-link{
+  display:inline-block; margin-top:10px; padding:8px 16px; border-radius:6px;
+  border:1px solid var(--orange-dim); color:var(--orange) !important; font-family:var(--mono);
+  font-size:13px; text-decoration:none;
+}
+.demo-link:hover{ background:rgba(255,122,26,0.1); }
+.proj-grid{ display:flex; flex-direction:column; gap:8px; }
+.proj-card{
+  display:flex; align-items:center; gap:14px; padding:12px; border-radius:8px;
+  border:1px solid var(--line); cursor:pointer; background:var(--bg-panel-2);
+}
+.proj-card:hover{ border-color:var(--orange-dim); }
+.proj-card .glyph{ width:40px; height:40px; border-radius:9px; font-size:19px; flex-shrink:0; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 14px rgba(0,0,0,0.4); }
+.proj-card-title{ font-family:var(--mono); font-size:13.5px; color:var(--text); }
+.proj-card-sub{ font-size:12px; color:var(--text-dim); margin-top:2px; }
+.status-pill{
+  display:inline-block; font-family:var(--mono); font-size:11.5px; padding:3px 10px;
+  border-radius:20px; background:rgba(255,122,26,0.12); color:var(--orange); margin-bottom:14px;
+}
+
+::-webkit-scrollbar{ width:9px; height:9px; }
+::-webkit-scrollbar-thumb{ background:var(--line); border-radius:5px; }
+</style>
+</head>
+<body>
+
+<div id="desktop"></div>
+
+<div id="start-menu">
+  <input id="start-search" type="text" placeholder="🔎 Pesquisar">
+  <div class="start-sep"></div>
+  <div class="start-item" data-open="projetos">📁 Projetos</div>
+  <div class="start-item" data-open="sobre">👤 Sobre mim</div>
+  <div class="start-item" data-open="contato">📧 Contato</div>
+  <div class="start-item" data-open="config">⚙️ Configurações</div>
+</div>
+
+<div id="taskbar">
+  <button id="start-btn">◉ Menu</button>
+  <div id="taskbar-apps"></div>
+  <div id="clock">--:--</div>
+</div>
+
+<script>
+// ---------- Dados dos projetos ----------
+const PROJECTS = {
+  caixa: {
+    label: "Caixa YumiStudioArt", glyph: "🧮", accent:true,
+    overview: `<span class="status-pill">Em desenvolvimento</span>
+      <p>Sistema de caixa (PDV) leve para a YumiStudioArt, feito para rodar simultaneamente em ~5 celulares e 2 computadores. Permite abrir até 3 caixas independentes para eventos diferentes, com tela de seleção antes de entrar.</p>
+      <div class="tags"><span class="tag">Apps Script</span><span class="tag">Google Sheets</span><span class="tag">PDV</span></div>`,
+    files: ["Code.gs", "Index.html", "Estilos.html", "Scripts.html"],
+    code: `function abrirCaixa(numero) {\n  const planilha = SpreadsheetApp.getActive();\n  const aba = planilha.getSheetByName('Caixa_' + numero);\n  return aba.getDataRange().getValues();\n}`,
+    demo: "https://script.google.com/macros/s/AKfycbzML1SoY5FnJLb3yZwDl0zygv4bt5uMlFZJA-STMwuSl94AnZxGBGtvAicvv9uIuugZ/exec",
+    info: `<p><strong>Categoria:</strong> Aplicação Web (PDV)<br>
+      <strong>Tecnologias:</strong> Google Apps Script, Google Planilhas, HTML/CSS/JS<br>
+      <strong>Status:</strong> em desenvolvimento</p>
+      <p>Separa vendas por Pix, débito, crédito e dinheiro, com fechamento de caixa protegido por senha.</p>`
+  },
+  financeiro: {
+    label: "Controle Financeiro", glyph: "💰",
+    overview: `<span class="status-pill">Primeira versão entregue</span>
+      <p>Controle financeiro pessoal com gestão de múltiplas contas, entradas, categorização de despesas (Contas Essenciais, Lazer, Compras Importantes) e módulo de cartão de crédito com fatura consolidada.</p>
+      <div class="tags"><span class="tag">Apps Script</span><span class="tag">Google Sheets</span><span class="tag">Dashboard</span></div>`,
+    files: ["Code.gs", "Index.html", "Estilos.html", "Scripts.html", "README.md"],
+    code: `function gerarFatura(cartaoId, mes) {\n  const parcelas = buscarParcelas(cartaoId, mes);\n  return parcelas.reduce((soma, p) => soma + p.valor, 0);\n}`,
+    demo: "https://script.google.com/macros/s/AKfycbw064yhwUFm0_tnFHHr5fZv7MHGZLjar-HKEs73RRxRzsyGCPhlo7PtV6zDt6NU62N2/exec",
+    info: `<p><strong>Categoria:</strong> Aplicação Web (financeiro)<br>
+      <strong>Tecnologias:</strong> Google Apps Script, Google Planilhas, HTML/CSS/JS<br>
+      <strong>Status:</strong> versão completa entregue, módulo de cartão em ajuste</p>
+      <p>Temas claro e escuro, dashboard com gráfico comparativo mês a mês.</p>`
+  },
+  jogos: {
+    label: "Game Library Manager", glyph: "🎮",
+    overview: `<span class="status-pill">Concluído</span>
+      <p>Catálogo pessoal de jogos com cadastro completo (biblioteca, valor, zerado/platinado, tempo jogado, data de aquisição) e filtros de busca.</p>
+      <div class="tags"><span class="tag">Apps Script</span><span class="tag">Google Sheets</span><span class="tag">CRUD</span></div>`,
+    files: ["Code.gs", "index.html", "style.html", "script.html"],
+    code: `function filtrarJogos(criterio) {\n  return jogos.filter(j => j[criterio] === true);\n}`,
+    demo: "https://script.google.com/macros/s/AKfycbxqdt_exwlbKLn1JY9PeiaCYYtZ36qF1bOkCnUPj2CbyQTdhUM3BrdpcbAXAg3LbHyXOA/exec",
+    info: `<p><strong>Categoria:</strong> Aplicação Web (catalogação)<br>
+      <strong>Tecnologias:</strong> Google Apps Script, Google Planilhas, HTML/CSS/JS<br>
+      <strong>Status:</strong> concluído</p>
+      <p>Planilha "JOGOS" com colunas A–I + coluna "Pretende Platinar".</p>`
+  },
+  escola: {
+    label: "Gestão Escolar", glyph: "🏫", accent:true,
+    overview: `<span class="status-pill">Protótipo entregue</span>
+      <p>Sistema para a TM's Enterprise (cliente Ronan): histórico escolar, notas por matéria/bimestre, frequência e registros disciplinares dos alunos.</p>
+      <div class="tags"><span class="tag">Apps Script</span><span class="tag">Google Sheets</span><span class="tag">CRUD</span></div>`,
+    files: ["Code.gs", "Index.html", "Estilos.html", "Scripts.html", "appsscript.json", "README.md"],
+    code: `function loginProfessor(usuario, senha) {\n  const professores = getProfessores();\n  return professores.find(p => p.usuario === usuario && p.senha === senha);\n}`,
+    demo: "https://script.google.com/macros/s/AKfycbxOMozxF-6r985ht8U2gUomRBSKZnaMahW37XRQvYramZoydjzrdL8zQ-gOMTJ9bl5nnw/exec",
+    info: `<p><strong>Categoria:</strong> Aplicação Web (gestão escolar)<br>
+      <strong>Tecnologias:</strong> Google Apps Script, Google Planilhas, HTML/CSS/JS<br>
+      <strong>Status:</strong> protótipo completo entregue</p>
+      <p>Próximos passos: cadastro de professores, perfis de acesso, exportar PDF, busca/filtro.</p>
+      <p><strong>Login padrão:</strong> admin / admin123</p>`
+  }
+};
+
+const desktop = document.getElementById('desktop');
+const taskbarApps = document.getElementById('taskbar-apps');
+let zTop = 10;
+const openWindows = {};
+
+// ---------- Ícones da área de trabalho ----------
+function makeIcon(id, glyph, label, accent){
+  const el = document.createElement('div');
+  el.className = 'icon' + (accent ? ' accent' : '');
+  el.tabIndex = 0;
+  el.innerHTML = `<div class="glyph">${glyph}</div><div class="label">${label}</div>`;
+  el.addEventListener('dblclick', () => openWindow(id));
+  el.addEventListener('keydown', e => { if(e.key === 'Enter') openWindow(id); });
+  desktop.appendChild(el);
+}
+
+makeIcon('sobre', '👤', 'Sobre mim');
+makeIcon('projetos', '📁', 'Projetos');
+Object.entries(PROJECTS).forEach(([id, p]) => makeIcon(id, p.glyph, p.label, p.accent));
+
+// ---------- Janelas ----------
+function windowTemplate(id){
+  if(id === 'sobre'){
+    return {
+      title: '👤 Sobre mim',
+      tabs: [{name:'Perfil', body:`
+        <h2>TM19</h2>
+        <p>Desenvolvedor independente por trás da TM's Enterprises — construindo ferramentas para jogos, mods de Minecraft e utilitários de produtividade, sempre com identidade visual própria.</p>
+        <div class="tags"><span class="tag">Google Apps Script</span><span class="tag">Java / NeoForge</span><span class="tag">UI/UX</span></div>
+      `}]
+    };
+  }
+  if(id === 'projetos'){
+    const cards = Object.entries(PROJECTS).map(([pid, p]) => `
+      <div class="proj-card" data-open="${pid}">
+        <div class="glyph" style="background:linear-gradient(155deg, ${p.accent ? 'var(--orange), var(--orange-dim)' : 'var(--violet-2), var(--violet)'})">${p.glyph}</div>
+        <div>
+          <div class="proj-card-title">${p.label}</div>
+          <div class="proj-card-sub">Clique para abrir a ficha completa</div>
+        </div>
+      </div>`).join('');
+    return {
+      title: '📁 Projetos',
+      tabs: [{name:'Todos os projetos', body:`<div class="proj-grid">${cards}</div>`}]
+    };
+  }
+  const p = PROJECTS[id];
+  return {
+    title: `${p.glyph} ${p.label}`,
+    tabs: [
+      {name:'Visão Geral', body:p.overview},
+      {name:'Código', body:`<div class="file-list">${p.files.map(f=>`<div>📄 ${f}</div>`).join('')}</div><br><div class="code-preview">${p.code}</div>`},
+      {name:'Demonstração', body:`<div class="demo-frame">🖥️<br><a href="${p.demo}" target="_blank" rel="noopener" class="demo-link">Abrir demonstração ↗</a></div>`},
+      {name:'Informações', body:p.info}
+    ]
+  };
+}
+
+function openWindow(id){
+  if(openWindows[id]){
+    restoreWindow(id);
+    return;
+  }
+  const data = windowTemplate(id);
+  const win = document.createElement('div');
+  win.className = 'window';
+  win.style.left = (80 + Object.keys(openWindows).length * 32) + 'px';
+  win.style.top = (60 + Object.keys(openWindows).length * 28) + 'px';
+  win.style.width = '460px';
+  win.style.height = '400px';
+  win.style.zIndex = ++zTop;
+
+  const tabsHtml = data.tabs.map((t,i) => `<div class="win-tab ${i===0?'active':''}" data-tab="${i}">${t.name}</div>`).join('');
+  win.innerHTML = `
+    <div class="win-titlebar">
+      <div class="win-title">${data.title}</div>
+      <div class="win-controls">
+        <button class="win-btn min" title="Minimizar">–</button>
+        <button class="win-btn max" title="Maximizar">▢</button>
+        <button class="win-btn close" title="Fechar">×</button>
+      </div>
+    </div>
+    ${data.tabs.length > 1 ? `<div class="win-tabs">${tabsHtml}</div>` : ''}
+    <div class="win-body">${data.tabs[0].body}</div>
+  `;
+  desktop.parentElement.appendChild(win);
+  openWindows[id] = win;
+
+  // Tabs
+  win.querySelectorAll('.win-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      win.querySelectorAll('.win-tab').forEach(t=>t.classList.remove('active'));
+      tab.classList.add('active');
+      win.querySelector('.win-body').innerHTML = data.tabs[+tab.dataset.tab].body;
+    });
+  });
+
+  // Cards da janela "Projetos"
+  win.addEventListener('click', e => {
+    const card = e.target.closest('.proj-card');
+    if(card) openWindow(card.dataset.open);
+  });
+
+  // Controles
+  win.querySelector('.close').addEventListener('click', () => closeWindow(id));
+  win.querySelector('.min').addEventListener('click', () => minimizeWindow(id));
+  win.querySelector('.max').addEventListener('click', () => toggleMaximize(id));
+  win.addEventListener('mousedown', () => { win.style.zIndex = ++zTop; });
+
+  makeDraggable(win);
+  addTaskbarChip(id, data.title);
+}
+
+function closeWindow(id){
+  openWindows[id].remove();
+  delete openWindows[id];
+  document.getElementById('chip-'+id)?.remove();
+}
+function minimizeWindow(id){ openWindows[id].classList.add('minimized'); }
+function restoreWindow(id){ openWindows[id].classList.remove('minimized'); openWindows[id].style.zIndex = ++zTop; }
+function toggleMaximize(id){
+  const win = openWindows[id];
+  if(win.dataset.max === '1'){
+    win.style.width = win.dataset.prevW; win.style.height = win.dataset.prevH;
+    win.style.left = win.dataset.prevL; win.style.top = win.dataset.prevT;
+    win.dataset.max = '0';
+  } else {
+    win.dataset.prevW = win.style.width; win.dataset.prevH = win.style.height;
+    win.dataset.prevL = win.style.left; win.dataset.prevT = win.style.top;
+    win.style.left = '20px'; win.style.top = '20px';
+    win.style.width = 'calc(100% - 40px)'; win.style.height = 'calc(100% - 84px)';
+    win.dataset.max = '1';
+  }
+}
+
+function addTaskbarChip(id, title){
+  const chip = document.createElement('div');
+  chip.className = 'task-chip active';
+  chip.id = 'chip-' + id;
+  chip.textContent = title;
+  chip.addEventListener('click', () => {
+    if(openWindows[id].classList.contains('minimized')) restoreWindow(id);
+    else minimizeWindow(id);
+  });
+  taskbarApps.appendChild(chip);
+}
+
+function makeDraggable(win){
+  const bar = win.querySelector('.win-titlebar');
+  let offX, offY, dragging = false;
+  bar.addEventListener('mousedown', e => {
+    if(e.target.closest('.win-btn')) return;
+    dragging = true;
+    offX = e.clientX - win.offsetLeft;
+    offY = e.clientY - win.offsetTop;
+    bar.style.cursor = 'grabbing';
+  });
+  document.addEventListener('mousemove', e => {
+    if(!dragging) return;
+    win.style.left = Math.max(0, e.clientX - offX) + 'px';
+    win.style.top = Math.max(0, e.clientY - offY) + 'px';
+  });
+  document.addEventListener('mouseup', () => { dragging = false; bar.style.cursor = 'grab'; });
+}
+
+// ---------- Menu iniciar ----------
+const startBtn = document.getElementById('start-btn');
+const startMenu = document.getElementById('start-menu');
+startBtn.addEventListener('click', () => startMenu.classList.toggle('open'));
+document.addEventListener('click', e => {
+  if(!startMenu.contains(e.target) && e.target !== startBtn) startMenu.classList.remove('open');
+});
+startMenu.querySelectorAll('.start-item').forEach(item => {
+  item.addEventListener('click', () => {
+    const target = item.dataset.open;
+    if(target === 'projetos') Object.keys(PROJECTS).forEach(id => openWindow(id));
+    else if(target === 'sobre') openWindow('sobre');
+    startMenu.classList.remove('open');
+  });
+});
+
+// ---------- Relógio ----------
+function tick(){
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+}
+tick(); setInterval(tick, 15000);
+
+// Abre "Sobre mim" por padrão
+openWindow('sobre');
+</script>
+</body>
+</html>
